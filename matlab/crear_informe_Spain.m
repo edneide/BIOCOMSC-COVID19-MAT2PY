@@ -39,6 +39,7 @@ for i = 1:length(Spain)
     deaths = cell2mat(DEATHS(2:end,ID));
     [xp,yp,ep] = informe(A,data,deaths,Spain{i},population(i),guardar,yF);
     %% continue here
+    break
 
     id{i,1} = Spain{i};
     id{i,2} = xp;

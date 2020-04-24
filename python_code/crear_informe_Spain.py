@@ -11,7 +11,7 @@ population = [8414240, 1319291, 1022800, 1149460, 2153389, 581078, 2032863, 2399
               5003769, 1067710, 2699499, 6663394, 86487, 1493898, 654214, 2207776, 316798, 47026208]
 guardar = True
 txt = True
-filename = './data/Data_Spain_v2.xlsx'
+filename = './covid19/data/Data_Spain_v2.xlsx'
 DATA = pd.read_excel(filename, sheet_name='Cases')
 DEATHS = pd.read_excel(filename, sheet_name='Deaths')
 
@@ -32,7 +32,7 @@ for i in range(len(Avec)):
     y, m, d = map(int, AvecReverse[i].split('/'))
     if not np.char.isnumeric(Avec[i]):
 
-        dateNum = date.toordinal(date(y, m, d)) + 366
+        dateNum = date.toordinal(date(y, m, d))
         A[i] = dateNum
     else:
         A[i] = Avec[i]
