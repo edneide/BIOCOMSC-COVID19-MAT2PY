@@ -1,8 +1,8 @@
+from informe import generate_data
+from datetime import date
 import pandas as pd
 import os
 import numpy as np
-from datetime import date
-from informe import generate_data
 
 Spain = ['Andalucia', 'Aragon', 'Asturias', 'Baleares', 'Canarias', 'Cantabria',
          'Castilla-La Mancha', 'Castilla y Leon', 'Catalunya', 'Ceuta', 'Comunitat Valenciana',

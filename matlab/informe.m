@@ -72,6 +72,7 @@ if sum(y>100)>3 && max(y)>200
     FR = fitresult;
     
     for k = 1:Nvect
+        disp(k);
         xx = x(y>100);
         yy = y(y>100);
         x1 = xx(1:(5+k));
