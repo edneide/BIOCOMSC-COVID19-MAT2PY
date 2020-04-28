@@ -5,6 +5,7 @@ import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
+from matplotlib.ticker import AutoMinorLocator
 
 
 xx_ = 0
@@ -113,17 +114,24 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
                         xp.append((len(x) - 1) + 5)
         Npred = len(xp)
         dateNum = []
+        dateNumComplete = []
         dateNumPred = []
+        dateNumPredComplete = []
 
         for i in range(len(A)):
             convertData = date.fromordinal(A[i])
-            dateNum.append(convertData.strftime("%d-%m-%Y"))
+            dateNum.append(convertData.strftime("%d-%m"))
+            dateNumComplete.append(convertData.strftime("%d-%m-%Y"))
 
         convertDataLast = date.fromordinal(A[len(A) - 1])
 
         for k in range(Npred):
             convertDataLast += datetime.timedelta(days=1)
-            dateNumPred.append(convertDataLast.strftime("%d-%m-%Y"))
+            dateNumPred.append(convertDataLast.strftime("%d-%m"))
+            dateNumPredComplete.append(convertDataLast.strftime("%d-%m-%Y"))
+        
+        dateTotal = dateNum + dateNumPred 
+            
         xx_nd = np.asarray(xx)
         yy_nd = np.asarray(yy)
         yp, lep, uep = predband(xp, xx_nd, yy_nd, popt, model_ml, conf=.998018)
@@ -194,14 +202,15 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
             estimated = []
             
         t = np.arange(xx[0], 100, 0.1)
+        
+        
         fig, ax1 = plt.subplots()
 
         xfit = np.arange(0.0, len(x) + len(xp), 0.01)
         yfit = model_ml(xfit, popt[0], popt[1])
         ax1.plot(xfit, yfit, 'r--')
         ax1.plot(dateNum, y, 'b. ', label='Number of cases')
-        ax1.set_xticks(np.arange(0,  len(dateNum) - 1, 8))
-        ax1.errorbar(xp, yp, (lep, uep), 
+        ax1.errorbar(dateNumPred, yp, (lep, uep), 
                      fmt='r.',
                      elinewidth=0.5,
                      capsize=5,
@@ -210,13 +219,19 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
                      label='Predictions')
         ax1.set_ylabel('Cumulative confirmed cases')
         ax1.set_xlabel('Time (day)')
+        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+        labels = []
+        for i in ax1.get_xticks(): labels.append(dateTotal[i])
+        ax1.set_xticklabels(labels, rotation = 45, ha="right")
+        ax1.xaxis.set_minor_locator(AutoMinorLocator())
         ax1.legend()
 
         ax2 = ax1.twinx()
-        ax2.set_ylabel('Cumulative cases per 10^5')
+        ax2.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
         ax1_y_lim = ax1.get_ylim()
         limlim = ax1_y_lim[1]/pop*1e5
         ax2.set_ylim(0, limlim)
+        
 
         ax3 = ax1.twinx()
         ax3.axis('off')
@@ -227,12 +242,12 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
                 diference = yp[i] - yy[(len(yy) - 1)]
                 diference = round(diference)
                 table_data.append(
-                    [dateNumPred[i], "{} +({})".format(int(yp[i]), int(diference)), "{} - {}".format( int(yp[i] - lep[i]), int(yp[i] + uep[i]))])
+                    [dateNumPredComplete[i], "{} +({})".format(int(yp[i]), int(diference)), "{} - {}".format( int(yp[i] - lep[i]), int(yp[i] + uep[i]))])
             else:
                 diference = yp[i] - yp[i - 1]
                 diference = round(diference)
                 table_data.append(
-                    [dateNumPred[i], "{} +({})".format(int(yp[i]), int(diference)), "{} - {}".format( int(yp[i] - lep[i]), int(yp[i] + uep[i]))])
+                    [dateNumPredComplete[i], "{} +({})".format(int(yp[i]), int(diference)), "{} - {}".format( int(yp[i] - lep[i]), int(yp[i] + uep[i]))])
         table = ax3.table(cellText=table_data,
                           loc='center left',
                           zorder=3,
@@ -248,26 +263,32 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
         if len(estimated) == 0:
             print("Not enough data")
         else:
-            ax1.plot(dateNum, y, 'b.', label='confirmed cases')
-            ax1.plot(x[0:len(estimated)] - 18, estimated,'g.', label='estimated cases')
+            ax1.plot(dateNum, y, 'b.', label='Confirmed cases')
+            ax1.plot(x[0:len(estimated)] - 18, estimated,'g.', label='Estimated cases')
             
             ax1.set_ylabel('Number of cases')
-            ax1.set_xticks(np.arange(0,  len(dateNum) - 1 , 8))
             ax1.set_xlabel('Time (day)')
             a = ax1.get_xlim()
             ax1.set_xlim(T0, len(A)+Npred+1)
             a = ax1.get_xlim()
+            ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+            labels = []
+            for i in ax1.get_xticks(): labels.append(dateTotal[i])
+            ax1.set_xticklabels(labels, rotation = 45, ha="right")
             ax1.legend()
             
             ax2 = ax1.twinx()
-            ax2.set_ylabel('Cumulative cases per 10^5')
+            ax2.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
             ax1_y_lim = ax1.get_ylim()
             limlim = ax1_y_lim[1]/pop*1e5
             ax2.set_ylim(0, limlim)
+            ax1.xaxis.set_minor_locator(AutoMinorLocator())
         fig1.tight_layout()
 
         fig2, ax1 = plt.subplots()
         if Nvect > 0:
+            dateNum_ax1 = []
+            for i in tvect: dateNum_ax1.append(dateNum[i])
             ax1.errorbar(tvect, avect[:, 0], (avect[:, 1], avect[:, 2]), 
                      fmt='b.',
                      elinewidth=0.5,
@@ -275,15 +296,137 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
                      capthick=0.5,
                      ecolor='xkcd:blue',
                      label='Predictions')
+            
             ax1.plot(tvect, avect[:, 0], 'b--')
+            ax1.set_xlabel('Time (day)')
+            ax1.set_ylabel('a (day^-^1)')
+            ax1.set_xlim(T0, len(A)+Npred+1)
+            ax1.set_ylim(0, 0.2)
+            ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+            labels = []
+            for i in ax1.get_xticks(): labels.append(dateTotal[i])
+            ax1.set_xticklabels(labels, rotation = 45, ha="right")
+            ax1.xaxis.set_minor_locator(AutoMinorLocator())
         else:
             print("Not enough data")
+   
+        fig2.tight_layout()
+        
+        fig3, ax1 = plt.subplots()
+        if Nvect > 0:
+            ax1.errorbar(tvect, Kvect[:, 0], (Kvect[:, 1], Kvect[:, 2]), 
+                     fmt='b.',
+                     elinewidth=0.5,
+                     capsize=5,
+                     capthick=0.5,
+                     ecolor='xkcd:blue',
+                     label='Predictions')
+            ax1.plot(tvect, Kvect[:, 0], 'b--')
+            ax1.set_xlabel('Time (day)')
+            ax1.set_ylabel('K (Final number of cases)')
+            ax1.set_xlim(T0, len(A)+Npred+1)
+            ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+            labels = []
+            for i in ax1.get_xticks(): labels.append(dateTotal[i])
+            ax1.set_xticklabels(labels, rotation = 45, ha="right")
+        else:
+            print("Not enough data")
+        
+        if pop > 100e6:
+            ax1.set_ylim(1e4, 1e7)
+        else:
+            ax1.set_ylim(1e3, 1e6)
+        
+        ax1.set_yscale('log')
+        ax1.xaxis.set_minor_locator(AutoMinorLocator())
+        
+        
+        fig3.tight_layout()
+        
+        fig4, ax1 = plt.subplots()
+        ax1.bar(x[2:len(x)], y[2:len(y)] - y[1:len(y)-1], label='Confirmed')
+        ax1.bar(xp, np_, color='red', label='Predicted')
         ax1.set_xlabel('Time (day)')
-        ax1.set_ylabel('a (day^-^1)')
+        ax1.set_ylabel('Incident observed cases')
+        ax1.legend()
+        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+        labels = []
+        for i in ax1.get_xticks(): labels.append(dateTotal[i])
+        ax1.set_xticklabels(labels, rotation = 45, ha="right")
+        
+        ax2 = ax1.twinx()
+        ax2.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
+        ax1_y_lim = ax1.get_ylim()
+        limlim = ax1_y_lim[1]/pop*1e5
+        ax2.set_ylim(0, limlim)
+        ax1.xaxis.set_minor_locator(AutoMinorLocator())
+        
+        fig4.tight_layout()
+        
+        fig5, ax1 = plt.subplots()
+        
+        nw = y[1: len(y)] - y[0: len(y) - 1]
+        id_ = np.arange(6, len(nw) - 1)
+        rh = (nw[id_-1]+nw[id_]+nw[id_+1])/(nw[id_-6]+nw[id_-5]+nw[id_-4])
+        ax1.plot(x[id_+1], rh, 'bh ')
+        ax1.set_xlabel('Time (day)')
+        ax1.set_ylabel('\u03C1')
+        ax1.set_xlim(T0, len(A)+Npred+1)
+        ax1.set_ylim(0, 12)
+        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+        labels = []
+        for i in ax1.get_xticks(): labels.append(dateTotal[i])
+        ax1.set_xticklabels(labels, rotation = 45, ha="right")
+        ax1.xaxis.set_minor_locator(AutoMinorLocator())
+        ax1.set_title('Actual \u03C1 = {:2.1f}'.format(rh[len(rh) - 1]))
+        
+        fig5.tight_layout()
+        
+        fig6, ax1 = plt.subplots()
+        
+        ax1.plot(x, z, 'b.')        
+        ax1.set_ylabel('Number of cases')
+        ax1.set_xlabel('Time (day)')
         a = ax1.get_xlim()
         ax1.set_xlim(T0, len(A)+Npred+1)
         a = ax1.get_xlim()
-        fig2.tight_layout()
+        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+        labels = []
+        for i in ax1.get_xticks(): labels.append(dateTotal[i])
+        ax1.set_xticklabels(labels, rotation = 45, ha="right")        
+        ax2 = ax1.twinx()
+        ax2.set_ylabel('Cumulative deaths per $\mathregular{10^5}$ inhabitants')
+        ax1_y_lim = ax1.get_ylim()
+        limlim = ax1_y_lim[1]/pop*1e5
+        ax2.set_ylim(0, limlim)
+        ax1.xaxis.set_minor_locator(AutoMinorLocator())
+        
+        fig6.tight_layout()
+        
+        
+        
+        fig7, ax1 = plt.subplots()
+        
+        ax1.plot(x,100*z/y, 'bh')        
+        ax1.set_ylabel('Case fatality rate (%)')
+        ax1.set_xlabel('Time (day)')
+        a = ax1.get_xlim()
+        ax1.set_xlim(T0, len(A)+Npred+1)
+        a = ax1.get_xlim()
+        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+        labels = []
+        for i in ax1.get_xticks(): labels.append(dateTotal[i])
+        ax1.set_xticklabels(labels, rotation = 45, ha="right")        
+        ax2 = ax1.twinx()
+        ax2.set_ylabel('Cumulative deaths per $\mathregular{10^5}$ inhabitants')
+        ax1_y_lim = ax1.get_ylim()
+        limlim = ax1_y_lim[1]/pop*1e5
+        ax2.set_ylim(0, limlim)
+        ax1.xaxis.set_minor_locator(AutoMinorLocator())
+        
+        fig7.tight_layout()        
+
+    
         plt.show()
             
         
