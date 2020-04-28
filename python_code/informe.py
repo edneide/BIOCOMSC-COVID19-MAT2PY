@@ -1,11 +1,12 @@
 from datetime import date
 from scipy.stats.distributions import t
 from scipy.optimize import curve_fit
+from matplotlib.ticker import AutoMinorLocator
 import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
-from matplotlib.ticker import AutoMinorLocator
+
 
 
 xx_ = 0
@@ -424,7 +425,9 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
         ax2.set_ylim(0, limlim)
         ax1.xaxis.set_minor_locator(AutoMinorLocator())
         
-        fig7.tight_layout()        
+        fig7.tight_layout()
+        
+              
 
     
         plt.show()
