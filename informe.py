@@ -2,6 +2,8 @@ from datetime import date
 from scipy.stats.distributions import t
 from scipy.optimize import curve_fit
 from matplotlib.ticker import AutoMinorLocator
+from matplotlib import pyplot as plot
+from matplotlib.backends.backend_pdf import PdfPages
 import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
@@ -203,234 +205,228 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
             estimated = []
             
         t = np.arange(xx[0], 100, 0.1)
-        
-        
-        fig, ax1 = plt.subplots()
-
-        xfit = np.arange(0.0, len(x) + len(xp), 0.01)
-        yfit = model_ml(xfit, popt[0], popt[1])
-        ax1.plot(xfit, yfit, 'r--')
-        ax1.plot(dateNum, y, 'b. ', label='Number of cases')
-        ax1.errorbar(dateNumPred, yp, (lep, uep), 
-                     fmt='r.',
-                     elinewidth=0.5,
-                     capsize=5,
-                     capthick=0.5,
-                     ecolor='xkcd:red',
-                     label='Predictions')
-        ax1.set_ylabel('Cumulative confirmed cases')
-        ax1.set_xlabel('Time (day)')
-        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
-        labels = []
-        for i in ax1.get_xticks(): labels.append(dateTotal[i])
-        ax1.set_xticklabels(labels, rotation = 45, ha="right")
-        ax1.xaxis.set_minor_locator(AutoMinorLocator())
-        ax1.legend()
-
-        ax2 = ax1.twinx()
-        ax2.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
-        ax1_y_lim = ax1.get_ylim()
-        limlim = ax1_y_lim[1]/pop*1e5
-        ax2.set_ylim(0, limlim)
-        
-
-        ax3 = ax1.twinx()
-        ax3.axis('off')
-        table_data = []
-      
-        for i in range(len(xp)):
-            if i == 0:
-                diference = yp[i] - yy[(len(yy) - 1)]
-                diference = round(diference)
-                table_data.append(
-                    [dateNumPredComplete[i], "{} +({})".format(int(yp[i]), int(diference)), "{} - {}".format( int(yp[i] - lep[i]), int(yp[i] + uep[i]))])
-            else:
-                diference = yp[i] - yp[i - 1]
-                diference = round(diference)
-                table_data.append(
-                    [dateNumPredComplete[i], "{} +({})".format(int(yp[i]), int(diference)), "{} - {}".format( int(yp[i] - lep[i]), int(yp[i] + uep[i]))])
-        table = ax3.table(cellText=table_data,
-                          loc='center left',
-                          zorder=3,
-                          cellLoc='center',
-                          bbox=[0.015, 0.5, 0.56, 0.3],
-                          colWidths=[0.2, 0.2, 0.3],
-                          colLabels=['Day', 'Prediction', 'Interval'])
-        fig.tight_layout()
-        
-        fig1, ax1 = plt.subplots()
-        
-        
-        if len(estimated) == 0:
-            print("Not enough data")
-        else:
-            ax1.plot(dateNum, y, 'b.', label='Confirmed cases')
-            ax1.plot(x[0:len(estimated)] - 18, estimated,'g.', label='Estimated cases')
+        with PdfPages('./covid19/reports_pdf/'+name+dateNumComplete[len(dateNumComplete) - 1]+'.pdf') as pdf:
+            #fig, axes = plt.subplots(nrows=4, ncols=2)
+            #ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8 = axes.flatten()
             
-            ax1.set_ylabel('Number of cases')
+            fig1, ax1 = plt.subplots()
+
+            xfit = np.arange(0.0, len(x) + len(xp), 0.01)
+            yfit = model_ml(xfit, popt[0], popt[1])
+            ax1.plot(xfit, yfit, 'r--')
+            ax1.plot(dateNum, y, 'b. ', label='Number of cases')
+            ax1.errorbar(dateNumPred, yp, (lep, uep), 
+                        fmt='r.',
+                        elinewidth=0.5,
+                        capsize=5,
+                        capthick=0.5,
+                        ecolor='xkcd:red',
+                        label='Predictions')
+            ax1.set_ylabel('Cumulative confirmed cases')
             ax1.set_xlabel('Time (day)')
-            a = ax1.get_xlim()
-            ax1.set_xlim(T0, len(A)+Npred+1)
-            a = ax1.get_xlim()
             ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
             labels = []
             for i in ax1.get_xticks(): labels.append(dateTotal[i])
             ax1.set_xticklabels(labels, rotation = 45, ha="right")
+            ax1.xaxis.set_minor_locator(AutoMinorLocator())
             ax1.legend()
-            
-            ax2 = ax1.twinx()
-            ax2.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
+
+            ax1_1 = ax1.twinx()
+            ax1_1.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
             ax1_y_lim = ax1.get_ylim()
             limlim = ax1_y_lim[1]/pop*1e5
-            ax2.set_ylim(0, limlim)
-            ax1.xaxis.set_minor_locator(AutoMinorLocator())
-        fig1.tight_layout()
-
-        fig2, ax1 = plt.subplots()
-        if Nvect > 0:
-            dateNum_ax1 = []
-            for i in tvect: dateNum_ax1.append(dateNum[i])
-            ax1.errorbar(tvect, avect[:, 0], (avect[:, 1], avect[:, 2]), 
-                     fmt='b.',
-                     elinewidth=0.5,
-                     capsize=5,
-                     capthick=0.5,
-                     ecolor='xkcd:blue',
-                     label='Predictions')
+            ax1_1.set_ylim(0, limlim)
             
-            ax1.plot(tvect, avect[:, 0], 'b--')
-            ax1.set_xlabel('Time (day)')
-            ax1.set_ylabel('a (day^-^1)')
-            ax1.set_xlim(T0, len(A)+Npred+1)
-            ax1.set_ylim(0, 0.2)
-            ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
-            labels = []
-            for i in ax1.get_xticks(): labels.append(dateTotal[i])
-            ax1.set_xticklabels(labels, rotation = 45, ha="right")
-            ax1.xaxis.set_minor_locator(AutoMinorLocator())
-        else:
-            print("Not enough data")
-   
-        fig2.tight_layout()
-        
-        fig3, ax1 = plt.subplots()
-        if Nvect > 0:
-            ax1.errorbar(tvect, Kvect[:, 0], (Kvect[:, 1], Kvect[:, 2]), 
-                     fmt='b.',
-                     elinewidth=0.5,
-                     capsize=5,
-                     capthick=0.5,
-                     ecolor='xkcd:blue',
-                     label='Predictions')
-            ax1.plot(tvect, Kvect[:, 0], 'b--')
-            ax1.set_xlabel('Time (day)')
-            ax1.set_ylabel('K (Final number of cases)')
-            ax1.set_xlim(T0, len(A)+Npred+1)
-            ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
-            labels = []
-            for i in ax1.get_xticks(): labels.append(dateTotal[i])
-            ax1.set_xticklabels(labels, rotation = 45, ha="right")
-        else:
-            print("Not enough data")
-        
-        if pop > 100e6:
-            ax1.set_ylim(1e4, 1e7)
-        else:
-            ax1.set_ylim(1e3, 1e6)
-        
-        ax1.set_yscale('log')
-        ax1.xaxis.set_minor_locator(AutoMinorLocator())
-        
-        
-        fig3.tight_layout()
-        
-        fig4, ax1 = plt.subplots()
-        ax1.bar(x[2:len(x)], y[2:len(y)] - y[1:len(y)-1], label='Confirmed')
-        ax1.bar(xp, np_, color='red', label='Predicted')
-        ax1.set_xlabel('Time (day)')
-        ax1.set_ylabel('Incident observed cases')
-        ax1.legend()
-        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
-        labels = []
-        for i in ax1.get_xticks(): labels.append(dateTotal[i])
-        ax1.set_xticklabels(labels, rotation = 45, ha="right")
-        
-        ax2 = ax1.twinx()
-        ax2.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
-        ax1_y_lim = ax1.get_ylim()
-        limlim = ax1_y_lim[1]/pop*1e5
-        ax2.set_ylim(0, limlim)
-        ax1.xaxis.set_minor_locator(AutoMinorLocator())
-        
-        fig4.tight_layout()
-        
-        fig5, ax1 = plt.subplots()
-        
-        nw = y[1: len(y)] - y[0: len(y) - 1]
-        id_ = np.arange(6, len(nw) - 1)
-        rh = (nw[id_-1]+nw[id_]+nw[id_+1])/(nw[id_-6]+nw[id_-5]+nw[id_-4])
-        ax1.plot(x[id_+1], rh, 'bh ')
-        ax1.set_xlabel('Time (day)')
-        ax1.set_ylabel('\u03C1')
-        ax1.set_xlim(T0, len(A)+Npred+1)
-        ax1.set_ylim(0, 12)
-        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
-        labels = []
-        for i in ax1.get_xticks(): labels.append(dateTotal[i])
-        ax1.set_xticklabels(labels, rotation = 45, ha="right")
-        ax1.xaxis.set_minor_locator(AutoMinorLocator())
-        ax1.set_title('Actual \u03C1 = {:2.1f}'.format(rh[len(rh) - 1]))
-        
-        fig5.tight_layout()
-        
-        fig6, ax1 = plt.subplots()
-        
-        ax1.plot(x, z, 'b.')        
-        ax1.set_ylabel('Number of cases')
-        ax1.set_xlabel('Time (day)')
-        a = ax1.get_xlim()
-        ax1.set_xlim(T0, len(A)+Npred+1)
-        a = ax1.get_xlim()
-        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
-        labels = []
-        for i in ax1.get_xticks(): labels.append(dateTotal[i])
-        ax1.set_xticklabels(labels, rotation = 45, ha="right")        
-        ax2 = ax1.twinx()
-        ax2.set_ylabel('Cumulative deaths per $\mathregular{10^5}$ inhabitants')
-        ax1_y_lim = ax1.get_ylim()
-        limlim = ax1_y_lim[1]/pop*1e5
-        ax2.set_ylim(0, limlim)
-        ax1.xaxis.set_minor_locator(AutoMinorLocator())
-        
-        fig6.tight_layout()
-        
-        
-        
-        fig7, ax1 = plt.subplots()
-        
-        ax1.plot(x,100*z/y, 'bh')        
-        ax1.set_ylabel('Case fatality rate (%)')
-        ax1.set_xlabel('Time (day)')
-        a = ax1.get_xlim()
-        ax1.set_xlim(T0, len(A)+Npred+1)
-        a = ax1.get_xlim()
-        ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
-        labels = []
-        for i in ax1.get_xticks(): labels.append(dateTotal[i])
-        ax1.set_xticklabels(labels, rotation = 45, ha="right")        
-        ax2 = ax1.twinx()
-        ax2.set_ylabel('Cumulative deaths per $\mathregular{10^5}$ inhabitants')
-        ax1_y_lim = ax1.get_ylim()
-        limlim = ax1_y_lim[1]/pop*1e5
-        ax2.set_ylim(0, limlim)
-        ax1.xaxis.set_minor_locator(AutoMinorLocator())
-        
-        fig7.tight_layout()
-        
-              
 
+            ax1_2 = ax1.twinx()
+            ax1_2.axis('off')
+            table_data = []
+        
+            for i in range(len(xp)):
+                if i == 0:
+                    diference = yp[i] - yy[(len(yy) - 1)]
+                    diference = round(diference)
+                    table_data.append(
+                        [dateNumPredComplete[i], "{} +({})".format(int(yp[i]), int(diference)), "{} - {}".format( int(yp[i] - lep[i]), int(yp[i] + uep[i]))])
+                else:
+                    diference = yp[i] - yp[i - 1]
+                    diference = round(diference)
+                    table_data.append(
+                        [dateNumPredComplete[i], "{} +({})".format(int(yp[i]), int(diference)), "{} - {}".format( int(yp[i] - lep[i]), int(yp[i] + uep[i]))])
+            table = ax1_2.table(cellText=table_data,
+                            loc='center left',
+                            zorder=3,
+                            cellLoc='center',
+                            bbox=[0.015, 0.5, 0.56, 0.3],
+                            colWidths=[0.2, 0.2, 0.3],
+                            colLabels=['Day', 'Prediction', 'Interval'])
+            fig1.tight_layout()
+            
+            
+            fig2, ax2 = plt.subplots()
+            
+            if len(estimated) == 0:
+                print("Not enough data")
+            else:
+                ax2.plot(dateNum, y, 'b.', label='Confirmed cases')
+                ax2.plot(x[0:len(estimated)] - 18, estimated,'g.', label='Estimated cases')
+                ax2.set_ylabel('Number of cases')
+                ax2.set_xlabel('Time (day)')
+                ax2.set_xlim(T0, len(A)+Npred+1)
+                ax2.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+                labels = []
+                for i in ax2.get_xticks(): labels.append(dateTotal[i])
+                ax2.set_xticklabels(labels, rotation = 45, ha="right")
+                ax2.legend()
+                ax2.xaxis.set_minor_locator(AutoMinorLocator())
+                ax2_1 = ax2.twinx()
+                ax2_1.set_ylabel('Cumulative cases per $\mathregular{10^5} inhabitants$')
+                ax1_y_lim = ax2.get_ylim()
+                limlim = ax1_y_lim[1]/pop*1e5
+                ax2_1.set_ylim(0, limlim)
+                
+            fig2.tight_layout()
+
+            fig3, ax3 = plt.subplots()
+            if Nvect > 0:
+                dateNum_ax1 = []
+                for i in tvect: dateNum_ax1.append(dateNum[i])
+                ax3.errorbar(tvect, avect[:, 0], (avect[:, 1], avect[:, 2]), 
+                        fmt='b.',
+                        elinewidth=0.5,
+                        capsize=5,
+                        capthick=0.5,
+                        ecolor='xkcd:blue',
+                        label='Predictions')
+                
+                ax3.plot(tvect, avect[:, 0], 'b--')
+                ax3.set_xlabel('Time (day)')
+                ax3.set_ylabel('a (day^-^1)')
+                ax3.set_xlim(T0, len(A)+Npred+1)
+                ax3.set_ylim(0, 0.2)
+                ax3.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+                labels = []
+                for i in ax3.get_xticks(): labels.append(dateTotal[i])
+                ax3.set_xticklabels(labels, rotation = 45, ha="right")
+                ax3.xaxis.set_minor_locator(AutoMinorLocator())
+            else:
+                print("Not enough data")
     
-        plt.show()
+            fig3.tight_layout()
             
+            fig4, ax4 = plt.subplots()
+            if Nvect > 0:
+                ax4.errorbar(tvect, Kvect[:, 0], (Kvect[:, 1], Kvect[:, 2]), 
+                        fmt='b.',
+                        elinewidth=0.5,
+                        capsize=5,
+                        capthick=0.5,
+                        ecolor='xkcd:blue',
+                        label='Predictions')
+                ax4.plot(tvect, Kvect[:, 0], 'b--')
+                ax4.set_xlabel('Time (day)')
+                ax4.set_ylabel('K (Final number of cases)')
+                ax4.set_xlim(T0, len(A)+Npred+1)
+                ax4.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+                labels = []
+                for i in ax4.get_xticks(): labels.append(dateTotal[i])
+                ax4.set_xticklabels(labels, rotation = 45, ha="right")
+            else:
+                print("Not enough data")
+            
+            if pop > 100e6:
+                ax4.set_ylim(1e4, 1e7)
+            else:
+                ax4.set_ylim(1e3, 1e6)
+            
+            ax4.set_yscale('log')
+            ax4.xaxis.set_minor_locator(AutoMinorLocator())
+        
+            fig4.tight_layout()
+            
+            fig5, ax5 = plt.subplots()
+            ax5.bar(x[2:len(x)], y[2:len(y)] - y[1:len(y)-1], label='Confirmed')
+            ax5.bar(xp, np_, color='red', label='Predicted')
+            ax5.set_xlabel('Time (day)')
+            ax5.set_ylabel('Incident observed cases')
+            ax5.legend()
+            ax5.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+            labels = []
+            for i in ax5.get_xticks(): labels.append(dateTotal[i])
+            ax5.set_xticklabels(labels, rotation = 45, ha="right")
+            
+            ax5_1 = ax5.twinx()
+            ax5_1.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
+            ax1_y_lim = ax5.get_ylim()
+            limlim = ax1_y_lim[1]/pop*1e5
+            ax5_1.set_ylim(0, limlim)
+            ax5.xaxis.set_minor_locator(AutoMinorLocator())
+            
+            fig5.tight_layout()
+            
+            fig6, ax6 = plt.subplots()
+            
+            nw = y[1: len(y)] - y[0: len(y) - 1]
+            id_ = np.arange(6, len(nw) - 1)
+            rh = (nw[id_-1]+nw[id_]+nw[id_+1])/(nw[id_-6]+nw[id_-5]+nw[id_-4])
+            ax6.plot(x[id_+1], rh, 'bh ')
+            ax6.set_xlabel('Time (day)')
+            ax6.set_ylabel('\u03C1')
+            ax6.set_xlim(T0, len(A)+Npred+1)
+            ax6.set_ylim(0, 12)
+            ax6.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+            labels = []
+            for i in ax6.get_xticks(): labels.append(dateTotal[i])
+            ax6.set_xticklabels(labels, rotation = 45, ha="right")
+            ax6.xaxis.set_minor_locator(AutoMinorLocator())
+            ax6.set_title('Actual \u03C1 = {:2.1f}'.format(rh[len(rh) - 1]))
+            
+            fig6.tight_layout()
+            
+            fig7, ax7 = plt.subplots()
+            
+            ax7.plot(x, z, 'b.')        
+            ax7.set_ylabel('Cumulative observed deaths')
+            ax7.set_xlabel('Time (day)')
+            ax7.set_xlim(T0, len(A)+Npred+1)
+            ax7.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+            labels = []
+            for i in ax7.get_xticks(): labels.append(dateTotal[i])
+            ax7.set_xticklabels(labels, rotation = 45, ha="right")        
+            ax7_1 = ax7.twinx()
+            ax7_1.set_ylabel('Cumulative deaths per $\mathregular{10^5}$ inhabitants')
+            ax1_y_lim = ax7.get_ylim()
+            limlim = ax1_y_lim[1]/pop*1e5
+            ax7_1.set_ylim(0, limlim)
+            ax7.xaxis.set_minor_locator(AutoMinorLocator())
+            
+            fig7.tight_layout()
+    
+            fig8, ax8 = plt.subplots()
+            
+            ax8.plot(x,100*z/y, 'bh')        
+            ax8.set_ylabel('Case fatality rate (%)')
+            ax8.set_xlabel('Time (day)')
+            ax8.set_xlim(T0, len(A)+Npred+1)
+            ax8.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
+            labels = []
+            for i in ax8.get_xticks(): labels.append(dateTotal[i])
+            ax8.set_xticklabels(labels, rotation = 45, ha="right")        
+            ax8.xaxis.set_minor_locator(AutoMinorLocator())
+            
+            fig8.tight_layout()
+            #fig.tight_layout()
+            plt.close()
+            pdf.savefig(fig1)
+            pdf.savefig(fig2)
+            pdf.savefig(fig3)
+            pdf.savefig(fig4)
+            pdf.savefig(fig5)
+            pdf.savefig(fig6)
+            pdf.savefig(fig7)
+            pdf.savefig(fig8)
+        
+            #plt.show()
+                
         
         
