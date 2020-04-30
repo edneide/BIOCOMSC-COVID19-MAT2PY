@@ -5,7 +5,8 @@ import pandas as pd
 import os
 import numpy as np
 import sys
-
+"""[summary] Usage example python3 crear_informe.py  data/Data_Spain_v2.xlsx 
+"""
 def main():
     
     filename = sys.argv[1]

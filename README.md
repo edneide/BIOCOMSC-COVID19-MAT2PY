@@ -8,8 +8,8 @@ Project authors: Martí Català, MD; Pere-Joan Cardona, PhD; Clara Prats, PhD; S
 
 ### Usage 
 Run in command line:
-```python
-$ python3 crear_informe.py  youdata.xlsx 
+```sh
+$python3 crear_informe.py  youdata.xlsx 
 ```
 
 License
