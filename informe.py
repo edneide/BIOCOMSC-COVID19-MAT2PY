@@ -213,7 +213,7 @@ def generate_data(dateData, data, deaths, name, pop):
             estimated = []
             
         t = np.arange(xx[0], 100, 0.1)
-        savePath = './covid19/reports_pdf/'+name+dateNumComplete[len(dateNumComplete) - 1]+'.pdf'
+        savePath = 'reports_pdf/'+name+dateNumComplete[len(dateNumComplete) - 1]+'.pdf'
         with PdfPages(savePath) as pdf:
             #fig, axes = plt.subplots(nrows=4, ncols=2)
             #ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8 = axes.flatten()

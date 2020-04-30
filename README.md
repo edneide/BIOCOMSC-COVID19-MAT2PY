@@ -6,6 +6,11 @@ We employ an empirical model, verified with the evolution of the number of confi
 
 Project authors: Martí Català, MD; Pere-Joan Cardona, PhD; Clara Prats, PhD; Sergio Alonso, PhD; Daniel López, PhD.
 
+### Usage 
+Run in command line:
+```python
+$ python3 crear_informe.py  youdata.xlsx 
+```
 
 License
 ---- 
