@@ -8,8 +8,9 @@ import scipy.stats
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
+import sys
 
-
+np.seterr(all='ignore')
 
 xx_ = 0
 yy_ = 0
@@ -43,9 +44,10 @@ def simple_confint(yy, popt, pcov):
         cf[i, 0] = p - sigma*tval
         cf[i, 1] = p + sigma*tval
         
-        print('p{0}: {1} [{2}  {3}]' .format(i, p,
+        '''print('p{0}: {1} [{2}  {3}]' .format(i, p,
                                                 p - sigma*tval,
                                                 p + sigma*tval))
+                                                '''
         
     return cf
     
@@ -74,11 +76,12 @@ def predband(x, xd, yd, p, func, conf=0.95):
     return yp, lpb, upb
 
 
-def generate_data(A, data, deaths, name, pop, guardar, yF):
+def generate_data(dateData, data, deaths, name, pop):
 
     x = np.arange(start=0, stop=len(data), step=1)
     y = data
     z = deaths
+    
 
     if sum(y > 100) > 3 and max(y) > 200:
         temp_x_y = np.logical_or(y > 100, None)
@@ -100,10 +103,10 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
 
         x0 = np.array([max(yy[(len(yy) - 1)], 1000), 0.2])
 
-        popt, pcov = curve_fit(model_ml, xx, yy, x0, method='lm')
+        popt, pcov = curve_fit(model_ml, xx, yy, x0, method='lm', maxfev = 10000)
 
         cf = simple_confint(yy, popt, pcov)
-        print('confidence interval\n', cf)
+        #print('confidence interval\n', cf)
         
         xp = [len(x)]
 
@@ -121,12 +124,12 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
         dateNumPred = []
         dateNumPredComplete = []
 
-        for i in range(len(A)):
-            convertData = date.fromordinal(A[i])
+        for i in range(len(dateData)):
+            convertData = date.fromordinal(int(dateData[i]))
             dateNum.append(convertData.strftime("%d-%m"))
             dateNumComplete.append(convertData.strftime("%d-%m-%Y"))
 
-        convertDataLast = date.fromordinal(A[len(A) - 1])
+        convertDataLast = date.fromordinal(int(dateData[len(dateData) - 1]))
 
         for k in range(Npred):
             convertDataLast += datetime.timedelta(days=1)
@@ -138,7 +141,7 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
         xx_nd = np.asarray(xx)
         yy_nd = np.asarray(yy)
         yp, lep, uep = predband(xp, xx_nd, yy_nd, popt, model_ml, conf=.998018)
-        print('yp_pre = ', yp)
+        #print('yp_pre = ', yp)
         for i in range(len(yp)):
             yp[i] = max(yp[i], y[len(y) - 1])
         np_ = [yp[0] - yy[len(yy) - 1]]
@@ -146,26 +149,31 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
         for i in range(len(lep)):
             lep[i] = round(lep[i], 1)
             uep[i] = round(uep[i], 1)
-        print('ep_low = ', lep, '\nep_upp = ', uep)
+        #print('ep_low = ', lep, '\nep_upp = ', uep)
         for ii in range(1, len(xp)):
             np_.append(yp[ii] - yp[ii - 1])
             en = np.append(en, np.sqrt(
                 (uep[ii] - yp[ii])**2+(uep[ii - 1]-yp[ii - 1])**2))
-        print('np = ', np_)
+        #print('np = ', np_)
         
         en = [en, en]
         en = np.transpose(en)
         
         for i in range(len(en)): en[i][0] = min(en[i][0], np_[i])
-        print(en)
+        #print(en)
         for i in range(len(lep)): lep[i] = max(lep[i], y[len(y) - 1])
         for i in range(len(lep)): lep[i] = yp[i] - lep[i]
         for i in range(len(uep)): uep[i] = max(uep[i], y[len(y) - 1])
         for i in range(len(uep)): uep[i] = uep[i] - yp[i]
         Nvect = len(x[y > 100 ])- 5 
         tvect = x[y>100]
+        
         if Nvect > 0:
             tvect = tvect[5:len(tvect)]
+        else:
+            sys.exit('\n\nError!!! It was not possible to make a prediction for '+name+'. Check the data. \n\nError information:  Nvect < 0')
+        
+        
         Kvect = np.zeros((Nvect, 3))
         avect = np.zeros((Nvect, 3))
         
@@ -180,12 +188,12 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
                 x1 = x1[(len(x1) - 15): len(x1)]
                 y1 = y1[(len(y1) - 15): len(y1)]
             
-            popt1, pcov1 = curve_fit(model_ml, x1, y1, x0, method='lm')
+            popt1, pcov1 = curve_fit(model_ml, x1, y1, x0, method='lm', maxfev = 10000)
             Kvect[k, 0] = popt1[0]
             avect[k, 0] = popt1[1]
             cf = simple_confint(y1, popt1, pcov1)
             cf = np.transpose(cf)
-            print('confidence interval\n', cf)
+            #print('confidence interval\n', cf)
             
             cf[0,0] = max(cf[0,0], y1[len(y1) - 1])
             cf[0,1] = max(cf[0,1],0)
@@ -205,7 +213,8 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
             estimated = []
             
         t = np.arange(xx[0], 100, 0.1)
-        with PdfPages('./covid19/reports_pdf/'+name+dateNumComplete[len(dateNumComplete) - 1]+'.pdf') as pdf:
+        savePath = './covid19/reports_pdf/'+name+dateNumComplete[len(dateNumComplete) - 1]+'.pdf'
+        with PdfPages(savePath) as pdf:
             #fig, axes = plt.subplots(nrows=4, ncols=2)
             #ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8 = axes.flatten()
             
@@ -272,7 +281,7 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
                 ax2.plot(x[0:len(estimated)] - 18, estimated,'g.', label='Estimated cases')
                 ax2.set_ylabel('Number of cases')
                 ax2.set_xlabel('Time (day)')
-                ax2.set_xlim(T0, len(A)+Npred+1)
+                ax2.set_xlim(T0, len(dateData)+Npred+1)
                 ax2.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
                 labels = []
                 for i in ax2.get_xticks(): labels.append(dateTotal[i])
@@ -302,7 +311,7 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
                 ax3.plot(tvect, avect[:, 0], 'b--')
                 ax3.set_xlabel('Time (day)')
                 ax3.set_ylabel('a (day^-^1)')
-                ax3.set_xlim(T0, len(A)+Npred+1)
+                ax3.set_xlim(T0, len(dateData)+Npred+1)
                 ax3.set_ylim(0, 0.2)
                 ax3.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
                 labels = []
@@ -326,7 +335,7 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
                 ax4.plot(tvect, Kvect[:, 0], 'b--')
                 ax4.set_xlabel('Time (day)')
                 ax4.set_ylabel('K (Final number of cases)')
-                ax4.set_xlim(T0, len(A)+Npred+1)
+                ax4.set_xlim(T0, len(dateData)+Npred+1)
                 ax4.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
                 labels = []
                 for i in ax4.get_xticks(): labels.append(dateTotal[i])
@@ -357,9 +366,9 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
             
             ax5_1 = ax5.twinx()
             ax5_1.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
-            ax1_y_lim = ax5.get_ylim()
-            limlim = ax1_y_lim[1]/pop*1e5
-            ax5_1.set_ylim(0, limlim)
+            #ax1_y_lim = ax5.get_ylim()
+            #limlim = ax1_y_lim[1]/pop*1e5
+            #ax5_1.set_ylim(0, ax5.get_ylim())
             ax5.xaxis.set_minor_locator(AutoMinorLocator())
             
             fig5.tight_layout()
@@ -368,11 +377,11 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
             
             nw = y[1: len(y)] - y[0: len(y) - 1]
             id_ = np.arange(6, len(nw) - 1)
-            rh = (nw[id_-1]+nw[id_]+nw[id_+1])/(nw[id_-6]+nw[id_-5]+nw[id_-4])
+            rh = (nw[id_-1]+nw[id_]+nw[id_+1])//(nw[id_-6]+nw[id_-5]+nw[id_-4])
             ax6.plot(x[id_+1], rh, 'bh ')
             ax6.set_xlabel('Time (day)')
             ax6.set_ylabel('\u03C1')
-            ax6.set_xlim(T0, len(A)+Npred+1)
+            ax6.set_xlim(T0, len(dateData)+Npred+1)
             ax6.set_ylim(0, 12)
             ax6.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
             labels = []
@@ -388,7 +397,7 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
             ax7.plot(x, z, 'b.')        
             ax7.set_ylabel('Cumulative observed deaths')
             ax7.set_xlabel('Time (day)')
-            ax7.set_xlim(T0, len(A)+Npred+1)
+            ax7.set_xlim(T0, len(dateData)+Npred+1)
             ax7.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
             labels = []
             for i in ax7.get_xticks(): labels.append(dateTotal[i])
@@ -407,7 +416,7 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
             ax8.plot(x,100*z/y, 'bh')        
             ax8.set_ylabel('Case fatality rate (%)')
             ax8.set_xlabel('Time (day)')
-            ax8.set_xlim(T0, len(A)+Npred+1)
+            ax8.set_xlim(T0, len(dateData)+Npred+1)
             ax8.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
             labels = []
             for i in ax8.get_xticks(): labels.append(dateTotal[i])
@@ -417,14 +426,21 @@ def generate_data(A, data, deaths, name, pop, guardar, yF):
             fig8.tight_layout()
             #fig.tight_layout()
             plt.close()
-            pdf.savefig(fig1)
-            pdf.savefig(fig2)
-            pdf.savefig(fig3)
-            pdf.savefig(fig4)
-            pdf.savefig(fig5)
-            pdf.savefig(fig6)
-            pdf.savefig(fig7)
-            pdf.savefig(fig8)
+            try:
+                pdf.savefig(fig1)
+                pdf.savefig(fig2)
+                pdf.savefig(fig3)
+                pdf.savefig(fig4)
+                pdf.savefig(fig5)
+                pdf.savefig(fig6)
+                pdf.savefig(fig7)
+                pdf.savefig(fig8)
+                
+                plt.close('all')
+                
+                print("\n\nPrediction for the region of "+ name+" performed successfully!\nPath:" + savePath)
+            except:
+                print("An exception occurred")
         
             #plt.show()
                 
