@@ -76,7 +76,7 @@ def predband(x, xd, yd, p, func, conf=0.95):
     return yp, lpb, upb
 
 
-def generate_data(dateData, data, deaths, name, pop):
+def generate_data(dateData, data, deaths, name, pop, brasil):
 
     x = np.arange(start=0, stop=len(data), step=1)
     y = data
@@ -128,8 +128,9 @@ def generate_data(dateData, data, deaths, name, pop):
             convertData = date.fromordinal(int(dateData[i]))
             dateNum.append(convertData.strftime("%d-%m"))
             dateNumComplete.append(convertData.strftime("%d-%m-%Y"))
-
-        convertDataLast = date.fromordinal(int(dateData[len(dateData) - 1]))
+            if i == len(dateData) - 1:
+                convertDataLast = convertData
+        #convertDataLast = date.fromordinal(int(dateData[len(dateData) - 1]))
 
         for k in range(Npred):
             convertDataLast += datetime.timedelta(days=1)
@@ -213,7 +214,10 @@ def generate_data(dateData, data, deaths, name, pop):
             estimated = []
             
         t = np.arange(xx[0], 100, 0.1)
-        savePath = 'reports_pdf/'+name+dateNumComplete[len(dateNumComplete) - 1]+'.pdf'
+        if brasil:
+            savePath = 'reports_pdf/brasil/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'.pdf'
+        else:
+            savePath = 'reports_pdf/'+dateNumComplete[len(dateNumComplete) - 1]+name+'.pdf'
         with PdfPages(savePath) as pdf:
             #fig, axes = plt.subplots(nrows=4, ncols=2)
             #ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8 = axes.flatten()

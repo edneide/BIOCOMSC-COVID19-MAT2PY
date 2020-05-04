@@ -1,51 +1,66 @@
 from informe import generate_data
+from crear_excel_brasil import run_crear_excel_brasil
 from progress.bar import IncrementalBar
-from datetime import date
+from datetime import date, datetime
 import pandas as pd
 import os
 import numpy as np
 import sys
-"""[summary] Usage example python3 crear_informe.py  data/Data_Spain_v2.xlsx 
+import time
+
 """
+For ALL      Usage example python3 crear_informe.py  data/Data_Spain_v2.xlsx 
+For Brasil   Usage example python3 crear_informe.py  brasil 
+"""
+
+
 def main():
     
     filename = sys.argv[1]
-    DATA = pd.read_excel(filename, sheet_name='Cases')
-    DEATHS = pd.read_excel(filename, sheet_name='Deaths')
-    POP = pd.read_excel(filename, sheet_name='Population')
+    brasil = False
+    filenameBRA =  'data/Data_Brasil.xlsx'
+    filenameBRAPOP = 'data/pop_Brasil.xlsx'
+    
+    if filename == 'brasil':
+        run_crear_excel_brasil()
+        filename = filenameBRA
+        DATA = pd.read_excel(filename, sheet_name='Cases')
+        DEATHS = pd.read_excel(filename, sheet_name='Deaths')
+        POP = pd.read_excel(filenameBRAPOP)
+        DIA = pd.to_datetime(DATA['date']).dt.strftime('%d/%m/%Y')
+        brasil = True
+    else:
+        DATA = pd.read_excel(filename, sheet_name='Cases')
+        DEATHS = pd.read_excel(filename, sheet_name='Deaths')
+        POP = pd.read_excel(filename, sheet_name='Population')
+        DIA = pd.to_datetime(DATA['Dia']).dt.strftime('%d/%m/%Y')
+    
+   
     Region = POP.columns
     Population = POP.loc[0]
 
-    DATA['Dia'] = pd.to_datetime(DATA['Dia']).dt.strftime('%d/%m/%Y')
-    DATA['DiaReverse'] = pd.to_datetime(DATA['Dia']).dt.strftime('%Y/%m/%d')
+    A = np.zeros((len(DIA), 1))
 
-    Avec = DATA['Dia']
-    Avec = Avec.to_numpy()
-
-    AvecReverse = DATA['DiaReverse']
-    AvecReverse = AvecReverse.to_numpy()
-
-    A = np.zeros((len(Avec), 1))
-
-    for i in range(len(Avec)):
-        y, m, d = map(int, AvecReverse[i].split('/'))
-        if not np.char.isnumeric(Avec[i]):
-
-            dateNum = date.toordinal(date(y, m, d))
-            A[i] = dateNum
-        else:
-            A[i] = Avec[i]
+    for i in range(len(DIA)):
+        d = datetime.strptime(DIA[i], '%d/%m/%Y').date()
+        dateNum = d.toordinal()
+        A[i] = dateNum
+      
 
     bar = IncrementalBar('Processing', max=len(Region))
+    start_time = time.time()
     for ID in range(len(Region)):
         data = DATA[Region[ID]]
         data = data.to_numpy()
         deaths = DEATHS[Region[ID]]
         deaths = deaths.to_numpy()
-        
-        generate_data(A, data, deaths, Region[ID], Population[ID])
+        generate_data(A, data, deaths, Region[ID], Population[ID], brasil)
         bar.next()
     bar.finish()
+    end_time = time.time()
+    print(end_time - start_time)
 
 if __name__ == "__main__":
+    #sys.argv.append('brasil')
+    #sys.argv.append('covid19/data/Data_Spain_v2.xlsx')
     main()
