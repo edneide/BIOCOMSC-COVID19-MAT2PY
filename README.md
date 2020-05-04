@@ -12,6 +12,13 @@ Run in command line:
 $python3 crear_informe.py  youdata.xlsx 
 ```
 
+To Brazil use:
+```sh
+$python3 crear_informe.py  brasil 
+```
+The data is retrieved automatically from: https://raw.githubusercontent.com/wcota/covid19br/master/cases-brazil-states.csv
+
+
 License
 ---- 
 

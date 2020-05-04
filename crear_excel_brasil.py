@@ -1,4 +1,6 @@
-"""Code generate by Renato Pessoa 
+"""
+
+Code by Renato Pessoa e Melo Neto
 
 Returns:
     [String] -- [formated excel path]
