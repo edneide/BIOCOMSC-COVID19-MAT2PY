@@ -16,10 +16,17 @@ For Brasil   Usage example python3 crear_informe.py  brasil
 
 def main():
     
-    filename = sys.argv[1]
-    brasil = False
-    filenameBRA =  'data/Data_Brasil.xlsx'
-    filenameBRAPOP = 'data/pop_Brasil.xlsx'
+    try:
+        filename = sys.argv[1]
+        brasil = False
+        filenameBRA =  'data/Data_Brasil.xlsx'
+        filenameBRAPOP = 'data/pop_Brasil.xlsx'
+    except:
+        print("\n\nFatal error!!!!!!!!!!\n\n",
+              "For ALL      Usage example python3 crear_informe.py  data/Data_Spain_v2.xlsx\n",
+              "For Brasil   Usage example python3 crear_informe.py  brasil")
+        sys.exit()
+        
     
     if filename == 'brasil':
         run_crear_excel_brasil()
