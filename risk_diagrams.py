@@ -50,7 +50,7 @@ def main():
         try:
             run_crear_excel_brasil()
             filename =  'data/Data_Brasil.xlsx'
-            filename_population = 'data/pop_Brasil.xlsx'
+            filename_population = 'data/pop_Brasil_v2.xlsx'
 
         except AttributeError:
             print('Error! Not found file or could not download!')
@@ -93,8 +93,9 @@ def main():
                 risk[i] = n_14_days[i]  * p_seven[i]
                 risk_per_10[i] = a_14_days[i]  * p_seven[i]
                 print(dia[i], cumulative_cases[i], new_cases[i], p[i], p_seven[i], n_14_days[i], a_14_days[i], risk[i], risk_per_10[i])
-            
+            first_day = dia[13]
             last_day = dia[len(dia) - 1]
+            first_day = first_day.replace('/','-')
             last_day = last_day.replace('/','-')
             if brasil:
                 savePath = 'reports_pdf/brasil/risk/'+last_day+'-'+Region[ID]+'.pdf'
@@ -106,10 +107,24 @@ def main():
                 lim = ax1.get_xlim()
                 x = np.ones(int(lim[1]))
                 ax1.plot(x, 'k-', fillstyle='none', linewidth=0.5)
-                ax1.set_ylim(0, 4)
-                ax1.set_xlim(0, len(x))
+                #ax1.set_ylim(0, 4)
+                #ax1.set_xlim(0, len(x))
                 ax1.set_ylabel('$\u03C1$ (mean of the last 7 days)')
                 ax1.set_xlabel('Attack rate per $10^5$ inh. (last 14 days)')
+                ax1.annotate(first_day,
+                                xy=(a_14_days[13], p_seven[13]), xycoords='data',
+                                xytext=(15, 3.2), textcoords='data',
+                                arrowprops=dict(arrowstyle="->",
+                                                connectionstyle="arc3", linewidth=0.4),
+            )
+                ax1.annotate(last_day,
+                                xy=(a_14_days[len(a_14_days) - 1], p_seven[len(p_seven) - 1]), xycoords='data',
+                                xytext=(30, 2.8), textcoords='data',
+                                arrowprops=dict(arrowstyle="->",
+                                                connectionstyle="arc3", linewidth=0.4),
+            )
+                
+
                 if brasil: 
                     bra_title = Region[ID] + ' - Brasil'
                     plt.title(bra_title)
