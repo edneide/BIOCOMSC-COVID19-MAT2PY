@@ -214,29 +214,68 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
             estimated = []
             
         t = np.arange(xx[0], 100, 0.1)
-        if brasil:
+        pt = True
+        if brasil and not pt:
             savePath = 'reports_pdf/brasil/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'.pdf'
+        elif brasil and pt:
+            savePath = 'reports_pdf/brasil/informe-pt/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'.pdf'
         else:
             savePath = 'reports_pdf/'+dateNumComplete[len(dateNumComplete) - 1]+name+'.pdf'
         with PdfPages(savePath) as pdf:
             #fig, axes = plt.subplots(nrows=4, ncols=2)
             #ax1, ax2, ax3, ax4, ax5, ax6, ax7, ax8 = axes.flatten()
             
+            if brasil and pt:
+                cases_label = 'Número de casos'
+                cumulative_confirmed_label  = 'Casos confirmados acumulados'
+                time_day_label = 'Tempo (dia)'
+                cumulative_cases_per_label = 'Casos acumulados por $\mathregular{10^5}$'
+                table_title_label = ['Dia', 'Predição', 'Intervalo']
+                prediction_label = 'Predição'
+                confirmed_cases_label = 'Casos confirmados'
+                estimated_cases_label = 'Casos estimados'
+                a_day_label = 'a (dia^-^1)'
+                k_label = 'K (Número de casos final)'
+                incident_observed_cases_label = 'Casos observados por incidentes'
+                confirmed_label = 'Confirmado'
+                actual_label = 'Atual'
+                cumulative_observed_deaths_label = 'Óbitos observados acumulados'
+                cumulative_observed_deaths_per_label = 'Óbitos acumulados por $\mathregular{10^5}$ hab.'
+                case_fatality_rate_label = 'Taxa de mortalidade de casos (%)'
+                
+            else: 
+                cases_label = 'Number of cases'
+                cumulative_confirmed_label  = 'Cumulative confirmed cases'
+                time_day_label = 'Time (day)'
+                cumulative_cases_per_label = 'Cumulative cases per $\mathregular{10^5}$'
+                table_title_label = ['Day', 'Prediction', 'Interval']
+                prediction_label = 'Prediction'
+                confirmed_cases_label = 'Confirmed cases'
+                estimated_cases_label = 'Estimated cases'
+                a_day_label = 'a (day^-^1)'
+                k_label = 'K (Final number of cases)'
+                incident_observed_cases_label = 'Incident observed cases' 
+                confirmed_label = 'Confirmed'
+                actual_label = 'Actual'
+                cumulative_observed_deaths_label = 'Cumulative observed deaths'
+                cumulative_observed_deaths_per_label = 'Cumulative deaths per $\mathregular{10^5}$ inhabitants'
+                case_fatality_rate_label = 'Case fatality rate (%)'
+            
             fig1, ax1 = plt.subplots()
 
             xfit = np.arange(0.0, len(x) + len(xp), 0.01)
             yfit = model_ml(xfit, popt[0], popt[1])
             ax1.plot(xfit, yfit, 'r--')
-            ax1.plot(dateNum, y, 'b. ', label='Number of cases')
+            ax1.plot(dateNum, y, 'b. ', label= cases_label)
             ax1.errorbar(dateNumPred, yp, (lep, uep), 
                         fmt='r.',
                         elinewidth=0.5,
                         capsize=5,
                         capthick=0.5,
                         ecolor='xkcd:red',
-                        label='Predictions')
-            ax1.set_ylabel('Cumulative confirmed cases')
-            ax1.set_xlabel('Time (day)')
+                        label= prediction_label)
+            ax1.set_ylabel(cumulative_confirmed_label)
+            ax1.set_xlabel(time_day_label)
             ax1.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
             labels = []
             for i in ax1.get_xticks(): labels.append(dateTotal[i])
@@ -245,7 +284,7 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
             ax1.legend()
 
             ax1_1 = ax1.twinx()
-            ax1_1.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
+            ax1_1.set_ylabel(cumulative_cases_per_label)
             ax1_y_lim = ax1.get_ylim()
             limlim = ax1_y_lim[1]/pop*1e5
             ax1_1.set_ylim(0, limlim)
@@ -272,8 +311,11 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
                             cellLoc='center',
                             bbox=[0.015, 0.5, 0.56, 0.3],
                             colWidths=[0.2, 0.2, 0.3],
-                            colLabels=['Day', 'Prediction', 'Interval'])
+                            colLabels= table_title_label)
             fig1.tight_layout()
+            if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/informe-pt/figures/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'_fig1.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300) 
             
             
             fig2, ax2 = plt.subplots()
@@ -281,10 +323,10 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
             if len(estimated) == 0:
                 print("Not enough data")
             else:
-                ax2.plot(dateNum, y, 'b.', label='Confirmed cases')
-                ax2.plot(x[0:len(estimated)] - 18, estimated,'g.', label='Estimated cases')
-                ax2.set_ylabel('Number of cases')
-                ax2.set_xlabel('Time (day)')
+                ax2.plot(dateNum, y, 'b.', label = confirmed_cases_label)
+                ax2.plot(x[0:len(estimated)] - 18, estimated,'g.', label = estimated_cases_label)
+                ax2.set_ylabel(cases_label)
+                ax2.set_xlabel(time_day_label)
                 ax2.set_xlim(T0, len(dateData)+Npred+1)
                 ax2.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
                 labels = []
@@ -293,12 +335,15 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
                 ax2.legend()
                 ax2.xaxis.set_minor_locator(AutoMinorLocator())
                 ax2_1 = ax2.twinx()
-                ax2_1.set_ylabel('Cumulative cases per $\mathregular{10^5} inhabitants$')
+                ax2_1.set_ylabel(cumulative_cases_per_label)
                 ax1_y_lim = ax2.get_ylim()
                 limlim = ax1_y_lim[1]/pop*1e5
                 ax2_1.set_ylim(0, limlim)
                 
             fig2.tight_layout()
+            if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/informe-pt/figures/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'_fig2.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300) 
 
             fig3, ax3 = plt.subplots()
             if Nvect > 0:
@@ -310,11 +355,11 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
                         capsize=5,
                         capthick=0.5,
                         ecolor='xkcd:blue',
-                        label='Predictions')
+                        label=prediction_label)
                 
                 ax3.plot(tvect, avect[:, 0], 'b--')
-                ax3.set_xlabel('Time (day)')
-                ax3.set_ylabel('a (day^-^1)')
+                ax3.set_xlabel(time_day_label)
+                ax3.set_ylabel(a_day_label)
                 ax3.set_xlim(T0, len(dateData)+Npred+1)
                 ax3.set_ylim(0, 0.2)
                 ax3.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
@@ -326,6 +371,9 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
                 print("Not enough data")
     
             fig3.tight_layout()
+            if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/informe-pt/figures/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'_fig3.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300) 
             
             fig4, ax4 = plt.subplots()
             if Nvect > 0:
@@ -335,10 +383,10 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
                         capsize=5,
                         capthick=0.5,
                         ecolor='xkcd:blue',
-                        label='Predictions')
+                        label=prediction_label)
                 ax4.plot(tvect, Kvect[:, 0], 'b--')
-                ax4.set_xlabel('Time (day)')
-                ax4.set_ylabel('K (Final number of cases)')
+                ax4.set_xlabel(time_day_label)
+                ax4.set_ylabel(k_label)
                 ax4.set_xlim(T0, len(dateData)+Npred+1)
                 ax4.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
                 labels = []
@@ -356,12 +404,15 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
             ax4.xaxis.set_minor_locator(AutoMinorLocator())
         
             fig4.tight_layout()
+            if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/informe-pt/figures/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'_fig4.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300) 
             
             fig5, ax5 = plt.subplots()
-            ax5.bar(x[2:len(x)], y[2:len(y)] - y[1:len(y)-1], label='Confirmed')
-            ax5.bar(xp, np_, color='red', label='Predicted')
-            ax5.set_xlabel('Time (day)')
-            ax5.set_ylabel('Incident observed cases')
+            ax5.bar(x[2:len(x)], y[2:len(y)] - y[1:len(y)-1], label=confirmed_label)
+            ax5.bar(xp, np_, color='red', label=prediction_label)
+            ax5.set_xlabel(time_day_label)
+            ax5.set_ylabel(incident_observed_cases_label)
             ax5.legend()
             ax5.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
             labels = []
@@ -369,13 +420,16 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
             ax5.set_xticklabels(labels, rotation = 45, ha="right")
             
             ax5_1 = ax5.twinx()
-            ax5_1.set_ylabel('Cumulative cases per $\mathregular{10^5}$')
+            ax5_1.set_ylabel(cumulative_cases_per_label)
             #ax1_y_lim = ax5.get_ylim()
             #limlim = ax1_y_lim[1]/pop*1e5
             #ax5_1.set_ylim(0, ax5.get_ylim())
             ax5.xaxis.set_minor_locator(AutoMinorLocator())
             
             fig5.tight_layout()
+            if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/informe-pt/figures/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'_fig5.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300) 
             
             fig6, ax6 = plt.subplots()
             
@@ -383,7 +437,7 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
             id_ = np.arange(6, len(nw) - 1)
             rh = (nw[id_-1]+nw[id_]+nw[id_+1])//(nw[id_-6]+nw[id_-5]+nw[id_-4])
             ax6.plot(x[id_+1], rh, 'bh ')
-            ax6.set_xlabel('Time (day)')
+            ax6.set_xlabel(time_day_label)
             ax6.set_ylabel('\u03C1')
             ax6.set_xlim(T0, len(dateData)+Npred+1)
             ax6.set_ylim(0, 12)
@@ -392,34 +446,40 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
             for i in ax6.get_xticks(): labels.append(dateTotal[i])
             ax6.set_xticklabels(labels, rotation = 45, ha="right")
             ax6.xaxis.set_minor_locator(AutoMinorLocator())
-            ax6.set_title('Actual \u03C1 = {:2.1f}'.format(rh[len(rh) - 1]))
+            ax6.set_title(actual_label+' \u03C1 = {:2.1f}'.format(rh[len(rh) - 1]))
             
             fig6.tight_layout()
+            if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/informe-pt/figures/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'_fig6.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300) 
             
             fig7, ax7 = plt.subplots()
             
             ax7.plot(x, z, 'b.')        
-            ax7.set_ylabel('Cumulative observed deaths')
-            ax7.set_xlabel('Time (day)')
+            ax7.set_ylabel(cumulative_observed_deaths_label)
+            ax7.set_xlabel(time_day_label)
             ax7.set_xlim(T0, len(dateData)+Npred+1)
             ax7.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
             labels = []
             for i in ax7.get_xticks(): labels.append(dateTotal[i])
             ax7.set_xticklabels(labels, rotation = 45, ha="right")        
             ax7_1 = ax7.twinx()
-            ax7_1.set_ylabel('Cumulative deaths per $\mathregular{10^5}$ inhabitants')
+            ax7_1.set_ylabel(cumulative_observed_deaths_per_label)
             ax1_y_lim = ax7.get_ylim()
             limlim = ax1_y_lim[1]/pop*1e5
             ax7_1.set_ylim(0, limlim)
             ax7.xaxis.set_minor_locator(AutoMinorLocator())
             
             fig7.tight_layout()
+            if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/informe-pt/figures/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'_fig7.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300) 
     
             fig8, ax8 = plt.subplots()
             
             ax8.plot(x,100*z/y, 'bh')        
-            ax8.set_ylabel('Case fatality rate (%)')
-            ax8.set_xlabel('Time (day)')
+            ax8.set_ylabel(case_fatality_rate_label)
+            ax8.set_xlabel(time_day_label)
             ax8.set_xlim(T0, len(dateData)+Npred+1)
             ax8.set_xticks(np.arange(0,  len(dateTotal) - 1, 5))
             labels = []
@@ -428,6 +488,9 @@ def generate_data(dateData, data, deaths, name, pop, brasil):
             ax8.xaxis.set_minor_locator(AutoMinorLocator())
             
             fig8.tight_layout()
+            if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/informe-pt/figures/'+dateNumComplete[len(dateNumComplete) - 1]+'-'+name+'_fig8.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300) 
             #fig.tight_layout()
             plt.close()
             try:

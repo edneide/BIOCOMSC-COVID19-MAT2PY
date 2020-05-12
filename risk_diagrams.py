@@ -49,6 +49,7 @@ def main():
         
     if filename == 'brasil':
         brasil = True
+        pt = True
         try:
             run_crear_excel_brasil()
             filename =  'data/Data_Brasil.xlsx'
@@ -99,8 +100,10 @@ def main():
             last_day = dia[len(dia) - 1]
             first_day = first_day.replace('/','-')
             last_day = last_day.replace('/','-')
-            if brasil:
+            if brasil and not pt:
                 savePath = 'reports_pdf/brasil/risk/'+last_day+'-'+Region[ID]+'.pdf'
+            elif brasil and pt:
+                savePath = 'reports_pdf/brasil/risk-pt/'+last_day+'-'+Region[ID]+'.pdf'
             else:
                 savePath = 'reports_pdf/risk/'+last_day+'-'+Region[ID]+'.pdf'
             with PdfPages(savePath) as pdf:
@@ -111,17 +114,21 @@ def main():
                 ax1.plot(x, 'k-', fillstyle='none', linewidth=0.5)
                 ax1.set_ylim(0, 4)
                 #ax1.set_xlim(0, len(x))
-                ax1.set_ylabel('$\u03C1$ (mean of the last 7 days)')
-                ax1.set_xlabel('Attack rate per $10^5$ inh. (last 14 days)')
+                if brasil and pt:
+                    ax1.set_ylabel('$\u03C1$ (média dos últimos 7 dias)')
+                    ax1.set_xlabel('Taxa de ataque por $10^5$ hab. (últimos 14 dias)')
+                else:
+                    ax1.set_ylabel('$\u03C1$ (mean of the last 7 days)')
+                    ax1.set_xlabel('Attack rate per $10^5$ inh. (last 14 days)')
                 ax1.annotate(first_day,
                                 xy=(a_14_days[13], p_seven[13]), xycoords='data',
-                                xytext=(len(x) - 30, 3), textcoords='data',
+                                xytext=(len(x) - abs(len(x)/2), 3), textcoords='data',
                                 arrowprops=dict(arrowstyle="->",
                                                 connectionstyle="arc3", linewidth=0.4),
             )
                 ax1.annotate(last_day,
                                 xy=(a_14_days[len(a_14_days) - 1], p_seven[len(p_seven) - 1]), xycoords='data',
-                                xytext=(len(x) - 10, 3.5), textcoords='data',
+                                xytext=(len(x) - abs(len(x)/3), 3.5), textcoords='data',
                                 arrowprops=dict(arrowstyle="->",
                                                 connectionstyle="arc3", linewidth=0.4),
             )
@@ -139,7 +146,10 @@ def main():
                 ax1.set_aspect('auto')
                 fig1.tight_layout()
                 #plt.show()
-                plt.close()    
+                #plt.close()
+                if brasil and pt:
+                    savePathImg = 'reports_pdf/brasil/risk-pt/'+last_day+'-'+Region[ID]+'.png'
+                    plt.savefig(savePathImg, bbox_inches='tight', dpi=300)    
                 try:
                     pdf.savefig(fig1)
                     plt.close('all')
@@ -165,5 +175,5 @@ def main():
             '''
             #break
 if __name__ == "__main__":
-    #sys.argv.append('brasil')
+    sys.argv.append('brasil')
     main()

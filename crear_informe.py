@@ -29,6 +29,7 @@ def main():
         
     
     if filename == 'brasil':
+        
         run_crear_excel_brasil()
         filename = filenameBRA
         DATA = pd.read_excel(filename, sheet_name='Cases')
@@ -68,6 +69,6 @@ def main():
     print(end_time - start_time)
 
 if __name__ == "__main__":
-    #sys.argv.append('brasil')
+    sys.argv.append('brasil')
     #sys.argv.append('covid19/data/Data_Spain_v2.xlsx')
     main()
